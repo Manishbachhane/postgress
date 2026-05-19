@@ -1,0 +1,298 @@
+Jab tum foreign key banate ho, PostgreSQL internally relationship rules enforce karta hai.
+
+foren key 
+
+CREATE TABLE todos (
+   id SERIAL PRIMARY KEY,
+   title VARCHAR(100),
+   user_id INT,--->ek coloum bnao 
+   
+   FOREIGN KEY (user_id)---->us coloum ko foren key bano 
+   REFERENCES users(id)----->foren key vale coloum me dusri table ke primary key add kroo  
+);
+
+
+
+Primary Key         vs        Foreign Key
+Primary Key                 	Foreign Key
+row ki main identity        	dusri table ki identity ko reference
+unique hoti hai	                repeat ho sakti hai
+ek table me mostly ek	        multiple ho sakti hain
+parent column	                child connection column
+
+
+
+-------------------------------------------------------------------------------------------------
+11. Candidate Key 🔑
+
+PostgreSQL me Candidate Key ka matlab hota hai:
+
+Wo columns jo uniquely identify kar sakte hain
+aur PRIMARY KEY banne ke layak hain
+
+
+Internally PostgreSQL ke liye candidate key ka matlab hota hai:
+
+Ye column unique + not null ho sakta hai
+aur row ko identify kar sakta hai
+
+Lekin jab tak usko officially PRIMARY KEY nahi banate, tab tak wo bas “possible primary key” hota hai.
+
+
+---->Candidate Key ek conceptual/database design term hai jo developer ke dimag me hota hai.\\
+
+
+
+-------------------------------------------------------------------------------------------------
+12. Composite Key 🔗
+
+PostgreSQL me Composite Key ka matlab hota hai:
+
+Jab multiple columns milkar
+ek row ko uniquely identify karein
+
+Bas.SQL me aise likhte hain:
+
+CREATE TABLE enrollments (
+   student_id INT,
+   course_id INT,
+
+   PRIMARY KEY(student_id, course_id)
+);
+
+Yaha:
+
+student_id + course_id
+
+milkar PRIMARY KEY ban rahe hain.
+
+--->Isi liye junction tables me composite keys bahut use hoti hain.
+
+Ye mostly use hota hai:
+
+-->many-to-many relationships
+-->enrollment systems
+-->order items
+-->permissions tables
+
+jaha single column enough nahi hota uniqueness ke liye
+
+CREATE TABLE enrollments (
+   student_id INT,
+   course_id INT,
+
+   PRIMARY KEY(student_id, course_id)
+);
+
+
+composite key me sirf 2 hi columns hona zaruri nahi hai.
+
+PostgreSQL me:
+
+2, 3, 4...
+multiple columns
+
+milkar composite key bana sakte hain.
+-------------------------------------------------------------------------------------------------
+Junction Table ka SQL kaise likhte hain?
+CREATE TABLE enrollments (
+   student_id INT REFERENCES students(id),
+   course_id INT REFERENCES courses(id)
+);
+
+-------------------------------------------------------------------------------------------------
+UNIQUE KEY
+Bas unique value ensure karta hai
+
+-------------------------------------------------------------------------------------------------
+
+14. Relational Model ❤️
+
+Iska simple meaning:
+
+Data tables me store hota hai
+aur tables ek dusre se connected hoti hain
+
+Bas.
+------>Relational Model ka simple meaning hota hai ki data alag alag tables me store hota hai aur wo tables
+ek dusre se connected hoti hain. Ye connection mostly IDs ke through banta hai. 
+Ek table apni primary key rakhti hai aur dusri table us ID ko foreign key ki tarah store karti hai.
+
+
+types->..
+One-to-One
+One-to-Many
+Many-to-Many
+
+Relation	        Meaning
+One-to-One  	ek row ↔ ek row
+One-to-Many 	ek row ↔ multiple rows
+Many-to-Many	multiple ↔ multiple
+-------------------------------------------------------------------------------------------------
+ACID Properties ⚡
+
+PostgreSQL me ACID Properties database ko reliable aur safe banati hain. Jab multiple users ek sath database use karte hain, tab data corrupt na ho, half-save na ho, aur galat state me na jaye — ye ensure karne ke liye ACID use hota hai.
+
+ACID ka full form hai:
+
+Atomicity--->1. Atomicity ⚛️
+            Ya to sab kuch hoga
+            ya kuch bhi nahi hoga
+Internally Kya Hota Hai?
+PostgreSQL transaction logs maintain karta hai.
+Jab tak COMMIT nahi hota:
+changes temporary state me rehte hain
+Agar error aaya:
+undo
+kar deta hai.
+
+
+
+
+Consistency--->2. Consistency ✅
+                    Consistency ka matlab:
+                    Database hamesha valid rules follow kare
+                    Example:
+                    Agar rule hai:
+                    balance negative nahi ho sakta
+                    Aur query negative balance bana rahi hai
+                    ❌ PostgreSQL reject kar dega.
+Consistency ensure karti hai:
+foreign keys valid ho
+constraints follow ho
+invalid data enter na ho
+Database broken state me nahi jata.
+
+Isolation-------->3. Isolation 🔒
+
+Isolation ka matlab:
+Multiple users ki transactios
+ek dusre ko disturb na karein
+Example: 2 users same time pe same bank account update kar rahe hain.
+Without isolation:
+❌ wrong balance
+❌ overwritten data
+--------------->PostgreSQL internally transactions ko isolate karta hai taki concurrent users safely kaam kar sakein.
+
+
+
+Durability-------->Durability ensure karti hai ki COMMIT ke baad 
+transaction permanently save ho jaye. Server crash bhi ho jaye to 
+committed data lose nahi hoga.
+
+
+Ye mainly transactions me use hota hai.
+
+PostgreSQL me transaction multiple queries ka ek single unit hota hai, aur ACID properties ensure karti hain ki wo unit safely aur correctly execute ho.
+-------------------------------------------------------------------------------------------------
+Normalization Basics 📚
+
+PostgreSQL me Normalization ek database design technique hai jiska purpose hota hai:
+
+Data ko properly organize karna
+aur unnecessary duplicate data ko remove karna
+Maan lo tumne ek table banayi:
+
+order_id	user_name	  user_emai        product
+1	          Manish	manish@gmail.com	Laptop
+2	          Manish	manish@gmail.com	Mouse
+
+Yaha same user data baar baar repeat ho raha hai.
+Ye problem normalization solve karti hai.
+
+Agar kal Manish ka email change hua to tumhe multiple rows update karni padengi.
+Agar ek row update karna bhool gaye to inconsistent data aa jayega.
+
+=====>>Normalization =
+=====>>Duplicate data kam karna
+=====>>aur data ko proper tables me organize karna
+
+1NF-> ka simple matlab: Ek column me ek hi value honi chahiye,Matlab ek cell ke andar multiple values nahi store karni.
+
+2nf->2NF → Jo alag data hai usko alag table me rakho
+
+3nf->3NF → Jo dusre data pe depend karta hai usko bhi alag karo
+
+
+Ek Line Me Yaad Rakho 🔥
+Form	        Meaning
+1NF------>	ek cell = ek value
+2NF------>	repeated data alag karo
+3NF------>	dependent data alag karo
+
+
+-------------------------------------------------------------------------------------------------
+
+Data Integrity =
+Database ka data hamesha sahi aur valid rahe
+keys
+constraints
+relations
+
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+----->PostgreSQL Server What is PostgreSQL Server?
+
+PostgreSQL Server ek database engine hai jo client requests handle karta hai, 
+SQL queries process karta hai,data manage karta hai,
+aur transactions aur concurrency control provide karta hai.
+
+
+Backend Processes
+Each client connection gets a separate backend process.
+
+Example:
+
+User1 ---> Backend Process 1
+User2 ---> Backend Process 2
+User3 ---> Backend Process 3
+
+This allows multiple users to work simultaneously.
+
+--->Client-Server Architecture
+
+PostgreSQL Client-Server Architecture ka matlab hai:
+
+Ek system me client request bhejta hai aur server us request ko process karke result return karta hai.
+
+PostgreSQL bhi isi architecture par kaam karta hai.
+
+
+
+----->Database Cluster
+What is a Database Cluster in PostgreSQL?
+PostgreSQL me database cluster ek collection hota hai multiple
+databases ka jo ek single PostgreSQL server instance dwara manage kiya jata hai.
+
+
+---->Tablespace ka use database data ko physically hard disk me kaha store karna hai 
+ye decide karne ke liye hota hai. Normally PostgreSQL saara data apne default data directory (PGDATA) 
+me store karta hai, lekin large applications me kabhi kabhi different tables ya indexes ko alag storage
+locations pe rakhna useful hota hai.
+Isi purpose ke liye tablespaces use hote hain.
+
+Example ke liye maan lo ek ecommerce application me orders table bahut huge ho gayi aur fast SSD 
+storage pe rakhni hai, jabki baaki normal tables normal disk pe reh sakti hain. PostgreSQL me tum specific
+tables ya indexes ko kisi alag disk/folder me store kar sakte ho using tablespaces.
+Isse storage management aur performance optimization easier ho jata hai.
+
+
+------>WAL ka full form hota hai Write Ahead Log. Ye PostgreSQL ka safety/recovery system hai.
+PostgreSQL me MVCC ka full form hota hai Multi Version Concurrency Control. Ye PostgreSQL ka 
+system hai jo multiple users ko same time pe database use karne deta hai without heavy conflicts. 
+Simple words me MVCC database ke data ki multiple versions maintain karta hai taki ek user ka operation 
+dusre user ko unnecessarily block na kare.
+
+
+----->MVCC
+PostgreSQL me MVCC ka full form hota hai Multi Version Concurrency Control.
+Ye PostgreSQL ka system hai jo multiple users ko same time pe database use karne deta hai
+without heavy conflicts. Simple words me MVCC database ke data ki multiple versions maintain
+karta hai taki ek user ka operation dusre user ko unnecessarily block na kare.
+
+Example ke liye maan lo ek user kisi row ko update kar raha hai aur usi time dusra user same
+table ko read kar raha hai. Without MVCC database ko pura row/table lock karna padta aur dusre
+users wait karte. Lekin PostgreSQL MVCC use karta hai, isliye update hone ke baad bhi dusra user
+purani safe version read kar sakta hai jab tak transaction complete nahi hoti.

@@ -1,0 +1,12 @@
+UPPER
+->select upper(name) from employees
+LOWER
+LENGTH
+CONCAT
+CONCAT_WS
+TRIM
+SUBSTRING
+REPLACE
+LEFT
+RIGHT
+SPLIT_PART
