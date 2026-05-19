@@ -273,6 +273,19 @@ me store karta hai, lekin large applications me kabhi kabhi different tables ya 
 locations pe rakhna useful hota hai.
 Isi purpose ke liye tablespaces use hote hain.
 
+---> CREATE TABLESPACE fastspace-->phle folder banan he then use krna he 
+----> LOCATION '/pg_fast_storage';
+
+table ko desire file me lane ke liye
+CREATE TABLE users (
+   id SERIAL,
+   name TEXT
+)
+TABLESPACE fastspace;----> yha mention krnaa he 
+
+
+
+
 Example ke liye maan lo ek ecommerce application me orders table bahut huge ho gayi aur fast SSD 
 storage pe rakhni hai, jabki baaki normal tables normal disk pe reh sakti hain. PostgreSQL me tum specific
 tables ya indexes ko kisi alag disk/folder me store kar sakte ho using tablespaces.
@@ -296,3 +309,43 @@ Example ke liye maan lo ek user kisi row ko update kar raha hai aur usi time dus
 table ko read kar raha hai. Without MVCC database ko pura row/table lock karna padta aur dusre
 users wait karte. Lekin PostgreSQL MVCC use karta hai, isliye update hone ke baad bhi dusra user
 purani safe version read kar sakta hai jab tak transaction complete nahi hoti.
+
+
+
+DATA TYPES->>>>.
+1.SMALLINT ->2 bytes,Range: -32768 to 32767
+2.INTEGER/INT ->2. 4 bytes -2,147,483,648 to 2,147,483,647 , -> 2billion 
+3.BIGINT->  8 bytes
+4.DECIMAL/NUMERIC ->salary NUMERIC(10,2)->Meaning:10 total digits,2 decimal digits it will store exact value
+5.Real ->approximate value
+6.DOUBLE PRECISION-> approximate decimal values 8 bytes storage more precision than REAL
+
+
+UUID ->Universally Unique Identifier ,,16-byte binary value /id UUID DEFAULT gen_random_uuid()
+
+            Main Difference
+  JSON                           	JSONB
+Normal text	               Optimized binary
+Slow searching    	      Fast searching
+No indexing	               Indexing possible
+Formatting preserved	      Formatting removed
+Less used	               Most used
+
+
+->jonB me manualy index krna pdta he CREATE INDEX index_name ON table_name(column_name);
+
+JSONB Me Index
+JSONB ke liye mostly:
+GIN index
+use hota he.
+--->>CREATE TABLE users (
+      id SERIAL PRIMARY KEY,
+      settings JSONB
+);
+
+
+SERIAL and BIGSERIAL-->Auto-increment IDs
+
+Type	Range
+SERIAL	~2 billion
+BIGSERIAL	very huge (~9 quintillion)
