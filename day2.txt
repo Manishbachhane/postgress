@@ -1,0 +1,161 @@
+SQL commands ko hamesha ke liye yaad rakhne ka sabse best tarika hai isko ek Real-Life Analogy (kisi aam zindagi ke kaam) se jod dena.Hum database ko ek "Naya Ghar (House)" banane aur usme rehne ke example se samjhenge. Is kahani ko ek baar padhein, aap ise kabhi nahi bhulenge.
+
+1. DDL (Data Definition Language) - "Ghar ka Structure Banana"Concept: DDL ka kaam sirf ghar ki building, deewarein aur nakshe (blueprint) par hota hai. Iska andar rakhe saaman (data) se koi lena-dena nahi hai. Ye database ka structure tay karta hai.Commands:CREATE: Khali zameen par naya ghar ya naya kamra banana (Nayi Table create karna).ALTER: Bane hue ghar me ek nayi khidki ya darwaza nikalna (Table ke structure me naya column add karna ya change karna).DROP: Buldozer lagakar pura ghar hi tod dena, na ghar bacha na saaman (Table ko root se completely delete kar dena).TRUNCATE: Ghar ke andar ka saara saaman ek sath jhaadu maar ke bahar nikal dena, lekin ghar ki deewarein (structure) wahi rahengi (Table ko pura khali kar dena).
+
+2. DML (Data Manipulation Language) - "Ghar ka Saaman aur Log"Concept: Ghar ban chuka hai (DDL ne bana diya). Ab is ghar ke andar saaman rakhna, hatana ya badalna DML ka kaam hai. Ye sirf Data ke sath khelta hai.Commands:INSERT: Ghar me naya sofa ya naya TV lekar aana (Table me naya Data/Row daalna).UPDATE: Purane dabe wale TV ko hata kar waha Smart TV laga dena (Pehle se maujud Data ko modify karna).DELETE: Kisi ek tute hue kursi ko chun kar ghar se bahar nikal dena (Table me se kisi specific Data/Row ko delete karna)
+
+.3. DCL (Data Control Language) - "Ghar ki Security aur Chaabi"Concept: Ab aapka ghar ban gaya aur saaman bhi aa gaya. Lekin ghar me ghusne kisko dena hai aur kise nahi? DCL database ka "Security Guard" hai.Commands:GRANT: Apne dost ko apne ghar ki chaabi de dena taki wo andar aa sake (Kisi user ko database use karne ki Permission dena).REVOKE: Dost se ladaai hone par usse chaabi wapas chheen lena (Di gayi Permission ko wapas le lena).
+
+4. TCL (Transaction Control Language) - "Ghar ki Setting ka Undo/Save Button"Concept: Jab aap DML (Ghar me saaman jama rahe ho) ka use karte hain, toh TCL aapko sahuliyat deta hai ki kaam ko "Save" karna hai ya galti hone par "Undo" karna hai.Commands:COMMIT: Aapne saaman jamaya, aapko pasand aaya aur aapne setting final karke lock kardi (Changes ko permanently Save kar dena).ROLLBACK: Aapne neele rang ka parda lagaya, accha nahi laga, toh aapne turant usko hata kar wapas pehle jaisa kar diya (Galti hone par pichle state me Undo kar dena).SAVEPOINT: Saaman jamate waqt ek 'Check-point' bana lena. Jaise, "Yaha tak ki setting theek hai, isko save point bana lo, iske aage kuch gadbad hui toh pura shuru se nahi, bas yahi tak wapas aayenge" (Transaction me ek bookmark set karna).
+
+Quick Revision Summary (Kabi Na Bhulne Wala Table)CategoryFull FormReal-Life KaamMain CommandsDDLData Definition LanguageStructure (Ghar banana/todna)CREATE, ALTER, DROP, TRUNCATEDMLData Manipulation LanguageData (Saaman lana/badalna)INSERT, UPDATE, DELETEDCLData Control LanguageSecurity (Chaabi dena/lena)GRANT, REVOKETCLTransaction Control LanguageProgress (Save/Undo karna)COMMIT, ROLLBACK, SAVEPOINT
+
+
+-==-=-=-=-=-=-=-=-=-=--=-=--=-=-=---------=-=-=-=-=-==-=-======================================================
+-- create table student(
+-- 	id serial primary key,
+-- 	first_name varchar(50) not null,
+-- 	last_name varchar(50) not null,
+-- 	age smallint,
+-- 	city varchar(50),
+-- 	course varchar(50),
+-- 	joining date default current_date
+-- )
+
+-- INSERT INTO student (first_name, last_name, age, city, course, joining)
+-- VALUES 
+-- ('Rahul', 'Sharma', 21, 'Indore', 'B.Tech', '2025-01-15'),
+-- ('Amit', 'Verma', 22, 'Bhopal', 'BCA', '2025-02-10'),
+-- ('Neha', 'Patel', 20, 'Indore', 'B.Tech', '2025-01-20'),
+-- ('Aman', 'Gupta', 23, 'Ujjain', 'MCA', '2024-11-05'),
+-- ('Priya', 'Singh', 21, 'Jaipur', 'B.Sc', '2025-03-12'),
+-- ('Rohan', 'Joshi', 22, 'Indore', 'BCA', '2025-02-25'),
+-- ('Sneha', 'Reddy', 20, 'Bhopal', 'B.Tech', '2025-01-18'),
+-- ('Vikas', 'Mishra', 24, 'Jabalpur', 'MCA', '2024-10-10'),
+-- ('Tanvi', 'Choudhary', 21, 'Ujjain', 'B.Sc', '2025-03-01'),
+-- ('Deepak', 'Kumar', 22, 'Indore', 'BCA', '2025-04-14'),
+-- ('Anjali', 'Soni', 19, 'Indore', 'B.Com', '2025-05-01'),
+-- ('Rohit', 'Mehta', 23, 'Jaipur', 'B.Tech', '2025-01-05'),
+-- ('Karan', 'Johar', 25, 'Bhopal', 'MCA', '2024-09-15'),
+-- ('Divya', 'Nair', 20, 'Jabalpur', 'B.Sc', '2025-03-20'),
+-- ('Sunny', 'Gill', 22, 'Ujjain', 'B.Com', '2025-04-28');
+
+-- Q1 all data
+-- select * from student
+-- Q2 only first and last name 
+-- select first_name,last_name from student;
+-- Q3 name and city
+-- select first_name, city from student;
+-- Q4 change name to student name 
+-- select first_name as student_name from student;
+-- Q5 cahnge joinig to admission date 
+-- select joining as admission_date from student
+-- Q6 unique cities
+-- select city ,count(city) from student group by city
+-- Q7 unique courses
+-- select course,count(course) from student group by course;
+-- Q8 first name and increment age by 2
+-- select first_name,age+2 from student;
+-- Q9 print id name||last name together
+-- select id,concat_ws(' || ',first_name,last_name) from student;
+-- Q10 print all row limit 5 
+-- select * from student limit 5;
+
+
+-- Basic Filtering with WHERE (Task 11 - 20)
+-- Q1  all student Indore
+-- select * from student where city='Indore'
+-- Q2 B.Tech' course
+-- select * from student where course='B.Tech' 
+-- Q3 print  age > 22
+-- select * from student where age>22 order by age desc;
+-- Q4 print if age is smaller then 21 
+-- select * from student where age <=21
+-- Q5 print if age is smaller then 20
+-- select * from student where age<=20
+-- Q6 jo indore se nhi he 
+-- select * from student where city !='Indore'
+-- Q7 'B.Sc' nahi padh rahe
+-- select * from student where course!='B.Sc'
+-- Q8 jo 2025 me join hue hain
+-- select * from student where joining >='2025-01-01';
+-- Q9 31 December 2024 se pehle join
+-- select * from student where joining <='2024-12-31'
+-- Q10 id number 10 hai.
+-- select * from student where id=10
+
+
+-- Multiple Logics (AND, OR, IN, BETWEEN)
+-- Q1 s 'Indore' se hain AND 'B.Tech' padh rahe
+-- select * from student where city='Indore' and course='B.Tech';
+-- Q2 age 22 hai AND course 'BCA' hai
+-- select * from student where age=22 and course='BCA';
+-- Q3 'Bhopal' se hain ya fir 'Jaipur' se
+-- select * from student where city='Indore' or city='Jaipur';
+-- Q4 'MCA' padh rahe hain ya unki age 24 hai
+-- select * from student where course='MCA' AND age=24;
+-- Q5 age 21 se 23 ke beech me hai
+-- select * from student where  age>=21 or age<=23;
+-- Q6'2025-01-01' se '2025-03-31' ke beech join
+-- select * from student where  joining>='2025-01-01' or joining<='2025-03-31';
+-- Q7  using IN operator 'Indore', 'Bhopal', ya 'Ujjain' se hain.
+-- select * from student where city in ('Indore', 'Bhopal', 'Ujjain' );
+-- Q8 usign NOT IN nikalo jo 'Indore' aur 'Bhopal' ke nahi hain.
+-- select * from student where city not in ( 'Indore' ,'Bhopal');
+-- Q9 'B.Tech' ya 'MCA' me hain AND unki age 22 se badi hai.
+-- select * from student where course in( 'B.Tech','MCA') and age>22;
+-- Q10 o 'Indore' se hain aur unki age 20 hai, ya fir jo 'Jaipur' se hain aur age 23 hai.
+-- select * from student  where city='Indore' and age=20 or city='Jaipur' and age=23;
+
+-- Text Matching & Sorting (LIKE, ORDER BY)
+
+-- Q1 first_name 'R' letter start
+-- select  * from student where first_name like 'R%';
+-- Q2 last_name ke aakhiri me 'ma' aata he
+-- select * from  student where  last_name like '%ma'
+-- Q3 if name me sh he 
+-- select * from student where first_name like '%sh%';
+--Q4 arrange age Ascending
+-- select age from student order by age asc;
+-- Q5 first_name ke alphabetical order (A to Z)
+-- select * from student order by first_name asc;
+-- Q6 all data with age Descending
+-- select * from student order by age desc;
+-- Q7 Students ko unki city ke hisab se A to Z sort karo,
+-- aur agar city same ho toh age ke hisab se sort karo.
+-- select * from student order by city asc ,age asc; 
+-- Q8 Top 3 sabse purane joined students ka data nikalo (Sorting + Limit).
+-- select * from student order by joining desc limit 3;
+-- Q9 'Indore' ke un top 2 students ko dikhao jinki umar sabse kam hai
+-- select * from student where city='Indore' order by age asc limit 2; 
+-- Q10 first_name exactly 4 characters ka he 
+-- select * from student where first_name like '____';
+
+
+
+-- Level 5: Aggregation & Grouping
+-- Q1 total  students
+-- select count(*) from student;
+-- Q2 total indore city 
+-- select  count(*) from student where city='Indore';  
+-- Q3 maximum age 
+-- select * from student where age=(select max(age) from student)
+-- Q4 'B.Tech' course me sabse chote student ki umar (MIN(age))
+-- select * from student where course='B.Tech' and age=(select min(age) from student where course='B.Tech')
+-- Q5 average umar (AVG(age)) kya hai?
+-- select avg(age) from student 
+-- Q6 Group By: Har ek city me kitne-kitne students hain, count karke dikhao (GROUP BY city
+-- select city,count(city) from student group by city
+-- Q7 Group By: Har ek course me total kitne students enrolled hain?
+-- select course ,count(course) from student group by course order by course asc; 
+-- Q8 Har ek course ki average age kya hai, course wise dikhao.
+-- select course,avg(age) from student group by course
+-- Q9 Having Clause: Sirf un cities ke naam aur student 
+-- count dikhao jahan 3 se zyada students rehte hain (HAVING COUNT(*) > 3).
+
+
+
+
+
+
+
