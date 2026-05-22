@@ -1,0 +1,66 @@
+//im Practice case/when/then/else/end
+
+
+-- Purani table ho toh delete kar dega
+DROP TABLE IF EXISTS pawn_loans;
+
+-- Table banate hain
+CREATE TABLE pawn_loans (
+    loan_id SERIAL PRIMARY KEY,
+    customer_name VARCHAR(50),
+    category VARCHAR(30),        -- Gold, Silver, Electronics, Vehicle
+    item_weight_grams NUMERIC,   -- Jewelry ka wajan (Electronics/Vehicle mein NULL hoga)
+    loan_amount NUMERIC,         -- Kitne paise diye
+    status VARCHAR(20),          -- Active, Overdue, Closed
+    days_pending INT             -- Kitne din se byaj nahi aaya
+);
+
+-- 20 Rows ka Real Data Insert karte hain
+INSERT INTO pawn_loans (customer_name, category, item_weight_grams, loan_amount, status, days_pending) VALUES
+('Rahul Sharma', 'Gold', 15.5, 50000, 'Active', 10),
+('Priya Singh', 'Silver', 250, 15000, 'Overdue', 45),
+('Amit Patel', 'Electronics', NULL, 8000, 'Active', 5),
+('Neha Gupta', 'Gold', 8.2, 30000, 'Closed', 0),
+('Vikas Kumar', 'Vehicle', NULL, 45000, 'Overdue', 90),
+('Anjali Verma', 'Gold', 45.0, 150000, 'Active', 25),
+('Rohan Das', 'Silver', 500, 32000, 'Active', 12),
+('Sneha Reddy', 'Electronics', NULL, 12000, 'Overdue', 65),
+('Karan Singh', 'Gold', 5.0, 20000, 'Active', 8),
+('Pooja Mishra', 'Vehicle', NULL, 60000, 'Closed', 0),
+('Vikram Joshi', 'Gold', 12.0, 48000, 'Overdue', 120),
+('Meera Nair', 'Silver', 150, 10000, 'Active', 15),
+('Ravi Tiwari', 'Electronics', NULL, 5000, 'Closed', 0),
+('Aarti Chauhan', 'Gold', 22.5, 85000, 'Active', 5),
+('Suresh Pillai', 'Vehicle', NULL, 35000, 'Overdue', 70),
+('Kavita Rao', 'Gold', 10.0, 40000, 'Closed', 0),
+('Deepak Jain', 'Silver', 300, 20000, 'Active', 20),
+('Rina Sen', 'Electronics', NULL, 15000, 'Overdue', 55),
+('Sanjay Yadav', 'Gold', 50.5, 200000, 'Active', 2),
+('Manoj Thakur', 'Vehicle', NULL, 80000, 'Active', 30);
+
+
+//Scalar Subquery ka Golden Rule: "The Rule of ONE"
+
+-->Rule: Scalar subquery ko strictly sirf ek value (1 row aur 1 column) hi return karni chahiye.
+
+-->Operator Limitation: Iske bahar aap hamesha single-value operators ka hi use karenge jaise =, >, <, >=, <=, !=.
+
+-->Safety Hack: Agar inner query galti se multiple rows de sakti hai, toh syntax error aa jayega. Isse bachne ke liye inner query mein hamesha Aggregate function (MAX(), MIN(), AVG()) ya LIMIT 1 ka use karein.
+
+-->Galat: WHERE salary = (SELECT salary FROM employees) (Error dega kyunki list aayegi)
+
+-->Sahi: WHERE salary = (SELECT MAX(salary) FROM employees) (Hamesha ek hi value aayegi)
+
+
+
+-->2. Nested (Multi-row) Subquery ka Golden Rule: "Never use Equals (=)"
+
+-->Rule: Agar aapki inner query ek list return karne wali hai (multi-row), toh kabhi bhi = (equal to) operator ka use na karein.
+
+-->Operator Rule: List wali subqueries ke bahar hamesha IN, NOT IN, ANY, ya ALL jaise multi-row operators ka use karna compulsory hai.
+
+-->Column Matching: Jo column aap outer query ke WHERE mein compare kar rahe hain, inner query ke SELECT mein bhi exactly wahi same column hona chahiye.
+
+-->Galat: WHERE dept_id = (SELECT dept_id FROM departments) (Multiple values ke sath = kaam nahi karta)
+
+-->Sahi: WHERE dept_id IN (SELECT dept_id FROM departments) (Perfect)

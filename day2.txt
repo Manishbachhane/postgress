@@ -159,3 +159,62 @@ Quick Revision Summary (Kabi Na Bhulne Wala Table)CategoryFull FormReal-Life Kaa
 
 
 
+------------------------------------------------------------------------------------------------------------------------------------------------------
+constraints
+
+parent pr action hua toh suak reaction child pr dikhe ga 
+
+
+
+Scenario 1: RESTRICT (Safe but Strict)
+
+->Is table mein agar koi order pada hai, toh tum uss user ko delete nahi kar paoge.
+Database error phenk dega.
+
+->ON DELETE... ka code nahi likhte ho, toh default behavior RESTRICT hi hota hai.
+
+CREATE TABLE orders_restrict (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    total_amount DECIMAL(10, 2),
+    
+    -- Yahan hum column define kar rahe hain
+    user_id INT, 
+    
+    -- Yeh hai Asli Jadoo (The String)
+    FOREIGN KEY (user_id) REFERENCES users(user_id) 
+    ON DELETE RESTRICT ---->yha se restrict ho rha he
+    ON UPDATE RESTRICT ---->yha se restrict ho rha he
+);
+
+
+Scenario 2: CASCADE (The Domino Effect)
+->Agar Amazon jaisi app banani hai, jahan user ke delete hote hi uski saari search history ya cart items apne aap delete ho jayein, toh hum CASCADE use karenge.
+
+CREATE TABLE orders_cascade (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    product_name VARCHAR(200),
+    
+    user_id INT, 
+    
+    -- Ek ko udaoge, toh saare orders udd jayenge
+    FOREIGN KEY (user_id) REFERENCES users(user_id) 
+    ON DELETE CASCADE 
+    ON UPDATE CASCADE
+);
+
+
+Scenario 3: SET NULL (The Orphan Data)
+->Isme agar user delete hua, toh orders table se row delete nahi hogi. Bas user_id ki jagah khali (NULL) ho jayegi, taaki account delete hone ke baad bhi tumhara total profit calculate hota rahe.
+
+CREATE TABLE orders_setnull (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    bill_amount DECIMAL(10, 2),
+    
+    -- DHYAN DEIN: Yahan galti se bhi 'NOT NULL' mat likhna
+    user_id INT, 
+    
+    -- User gaya, par data bacha liya
+    FOREIGN KEY (user_id) REFERENCES users(user_id) 
+    ON DELETE SET NULL ->>>yha se hoga 
+);
+
