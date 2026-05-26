@@ -210,4 +210,40 @@ Scenario Decision
 -->Mujhe saara data chahiye, speed important hai  "UNION ALL"
 -->Mujhe saara unique data chahiye                 "UNION"
 -->Dono mein common kya hai?                       "INTERSECT"
--->Table A mein se Table B wale nikal do           "EXCEPT
+-->Table A mein se Table B wale nikal do           "EXCEPT"
+
+
+--------------------------------------------------------------------------------------------------------------
+
+
+To PostgreSQL internally ensure karta hai:ACID
+
+half update save na ho                          → Atomicity
+invalid data na aaye                            → Consistency
+dusri transaction interfere na kare             → Isolation
+crash ke baad bhi data rahe                     → Durability
+
+Ye saare milke ACID hain.
+
+
+
+
+----------------------------------------------------------------------------------------------------------------
+normalization 
+1nf->one cell one value 
+2nf->Haan, exactly — but more correctly:
+
+2NF mein har non-key column ko poori primary key par depend hona chahiye, sirf uske ek part par nahi.
+
+Agar primary key composite ho, jaise:
+
+(StudentID, CourseID)
+
+to non-key columns ko StudentID + CourseID dono par depend hona chahiye.
+Agar koi column sirf StudentID ya sirf CourseID par depend karta hai, to table 2NF mein nahi hai.
+
+
+3nf->3NF = 2NF + No Transitive Dependency
+
+3NF mein non-key column kisi dusre non-key column par depend nahi hona chahiye.
+Har non-key column directly primary key par depend hona chahiye.

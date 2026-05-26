@@ -1,0 +1,809 @@
+indexing 
+-----------------------------------------------------------------------------------------
+
+JSON VS JSONB
+
+-->JSON Kya Hai?->JSON data ko text format me store karta hai.
+
+-->JSONB Kya Hai?->JSONB same JSON data ko PostgreSQL internally optimized binary format me convert karta hai.
+
+Main Difference 
+JSON
+Raw text storage
+JSONB
+Optimized searchable storage
+
+
+Practical Difference
+
+->JSON
+1,Data read karte time PostgreSQL ko baar baar parse karna padta hai.
+Slow ho sakta hai.
+
+->JSONB
+Already optimized format me hota hai.
+Fast searching.
+Fast filtering.
+Indexing support
+
+
+
+
+=========================================================
+JSON — 10 Important Facts 🚀
+--->JSON data ko raw text format me store karta hai.
+--->Formatting preserve ho sakti hai.
+--->Key order preserve ho sakta hai.
+--->Duplicate keys allow karta hai.
+--->{
+--->  "name":"Aman",
+--->  "name":"Ravi"
+--->}
+--->Searching/filtering possible hai.
+--->But every query me parsing hoti hai.
+--->Isliye performance slower ho sakti hai.
+--->Proper indexing support weak hai.
+--->Mostly raw API responses store karne me use hota hai.
+--->Real-world PostgreSQL apps me rarely use hota hai.
+
+--->JSONB — 10 Important Fa
+-->JSONB — 10 Important Facts 🔥
+-->JSONB = Binary optimized JSON storage.
+-->PostgreSQL internally optimized structure banata hai.
+-->Formatting preserve nahi hoti.
+-->Duplicate keys automatically normalize ho jati hain.
+-->Searching/filtering much faster hoti hai.
+-->Powerful indexing possible hai.
+-->GIN indexes JSONB ke sath common hain.
+-->Nested objects/arrays efficiently handle karta hai.
+-->Real-world production apps me mostly JSONB use hota hai.
+-->Flexible schema + SQL power dono deta hai.
+
+
+
+operators
+->
+JSON object return karta hai.
+->>
+Text return karta hai.
+
+
+
+-> Operator
+-> operator JSON/JSONB object ke andar se value nikalta hai, lekin us value ko JSON format me hi return karta hai. Matlab PostgreSQL usko abhi bhi JSON maanta hai, normal text nahi. Ye mostly tab use hota hai jab tumhe nested JSON ke andar aur deep jana ho ya JSON structure maintain rakhna ho.
+
+
+->> Operator
+->> operator bhi JSON ke andar se value nikalta hai, but difference ye hai ki ye final value ko TEXT me convert kar deta hai. Real-world filtering, comparison, sorting me mostly ->> use hota hai kyuki SQL operations text par easy hote hain.
+
+SELECT *
+FROM products
+WHERE specs->>'brand'='Apple';
+
+
+#> Operator
+#> nested JSON path access karne ke liye use hota hai. Jab object ke andar object ho aur tum direct deep value tak jana chaho, tab useful hota hai. Ye JSON return karta hai.
+{
+  "specs":{
+      "ram":"8GB",
+      "storage":"256GB"
+  }
+}
+SELECT specs #> '{specs,ram}'
+FROM products;
+
+
+Same thing normal way:
+specs->'specs'->'ram'
+
+
+
+@> Operator
+@> containment operator hai. Ye check karta hai ki JSON object ke andar specific data exist karta hai ya nahi. Bohot important operator hai JSONB filtering me.
+
+{
+  "brand":"Apple",
+  "ram":"8GB"
+}
+
+SELECT *
+FROM products
+WHERE specs @> '{"brand":"Apple"}';
+
+
+Part 3: Dangerous Zone — Kaise use NAHI kar sakte? (Strict Rules)
+Bhai, is section ko dhyan se samajhna, saari errors yahi bachti hain:
+
+Rule 1: ->> ke aage chain nahi chalti!
+
+attributes -> 'stock_info' ->> 'quantity' ➔ Sahi hai (Pehle waale ne JSON diya, agle ne text nikala).
+
+attributes ->> 'stock_info' -> 'quantity' ➔ ➔ WRONG (ERROR)! Kyunki ->> ne pehle hi sab text bana diya, ab text ke andar arrow nahi ghus sakta.
+
+Rule 2: -> ko normal string se compare nahi kar sakte!
+
+WHERE attributes -> 'category' = 'auto_parts' ➔ WRONG! Database kahega ki left side JSON string hai "auto_parts" aur right side normal string hai 'auto_parts', dono alag hain.
+
+Rule 3: @> me incomplete structure nahi chalega!
+
+WHERE attributes @> '{"compatible_bikes": "Pulsar 220f"}' ➔ WRONG! Kyunki original data me compatible_bikes ek Array [] hai, toh right side me bhi array format ["Pulsar 220f"] hona zaroori hai.
+
+Rule 4: JSON operators ke andar mathematical check direct nahi hote!
+
+WHERE attributes ->> 'price' > 200 ➔ WRONG/UNEXPECTED! Kyunki ->> text return karta hai, aur text ka comparison text ki tarah hoga (jaise '30' bada ho jata hai '200' se alphabetical order me).
+
+Fix: Ise hamesha integer me cast karo:
+
+
+=-=--=-
+Ek Final Summary Cheat Sheet (Dimaag me chapne ke liye)
+-> ➔ Level ke andar jao (Output hamesha JSON).
+
+->> ➔ Level ke andar se value nikal lo (Output hamesha Text).
+
+#> ➔ Lambe raste ka shortcut (Output JSON).
+
+@> ➔ Check karo ki "Kya ye cheez isme hai?" (Output True/False).
+
+jsonb_set ➔ JSON ke andar ghuskar value badal do.
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+querys for all operators
+
+{
+  "order_id": "ORD-9921",
+  "customer": {
+    "name": "Amit Sharma",
+    "membership": "Premium",
+    "address": {
+      "city": "Indore",
+      "pincode": 452001
+    }
+  },
+  "payment": {
+    "method": "UPI",
+    "amount": 2499,
+    "status": "Success"
+  },
+  "items": ["Laptop Stand", "Wireless Mouse", "HDMI Cable"],
+  "delivery_days": 3
+}
+
+
+SELECT details -> 'customer' FROM orders;
+-- Output: {"name": "Amit Sharma", "membership": "Premium", ...}
+Query 2: Customer ke andar ka address object nikalna (Chaining)
+
+SQL
+SELECT details -> 'customer' -> 'address' FROM orders;
+-- Output: {"city": "Indore", "pincode": 452001}
+
+Query 3: Pura items ka array nikalna
+
+SQL
+SELECT details -> 'items' FROM orders;
+-- Output: ["Laptop Stand", "Wireless Mouse", "HDMI Cable"]
+Query 4: Items array ka PEHLA item nikalna (Index 0)
+
+SQL
+SELECT details -> 'items' -> 0 FROM orders;
+-- Output: "Laptop Stand" (JSON string format me)
+Query 5: Payment details ka object nikalna
+
+SQL
+SELECT details -> 'payment' FROM orders;
+-- Output: {"method": "UPI", "amount": 2499, "status": "Success"}
+
+----------------------------------------------------------------------------------
+
+2. ->> Operator ki 5 Queries (Output hamesha Plain Text/String)
+Query 1: Order ID ko normal text me nikalna
+
+SQL
+SELECT details ->> 'order_id' FROM orders;
+-- Output: ORD-9921 (Bina quotes ke)
+Query 2: Customer ka naam nikalna
+
+SQL
+SELECT details -> 'customer' ->> 'name' FROM orders;
+-- Output: Amit Sharma
+Query 3: Payment status nikal kar filter lagana (WHERE clause me)
+
+SQL
+SELECT * FROM orders WHERE details -> 'payment' ->> 'status' = 'Success';
+Query 4: Items array ke teesre item (HDMI Cable) ko plain text me nikalna
+
+SQL
+SELECT details -> 'items' ->> 2 FROM orders;
+-- Output: HDMI Cable
+Query 5: Delivery days nikal kar use Number me badalna (Casting) taaki math chal sake
+
+SQL
+SELECT * FROM orders WHERE (details ->> 'delivery_days')::INT <= 3;
+
+
+
+----------------------------------------------------------------------------------
+
+
+3. #> Operator ki 5 Queries (Path Shortcut - Output JSON)
+Query 1: Direct shehar (city) tak pahunchne ka shortcut
+
+SQL
+SELECT details #> '{customer, address, city}' FROM orders;
+-- Output: "Indore" (JSON Format)
+Query 2: Pincode tak pahunchne ka shortcut
+
+SQL
+SELECT details #> '{customer, address, pincode}' FROM orders;
+-- Output: 452001
+Query 3: Payment ka amount nikalna
+
+SQL
+SELECT details #> '{payment, amount}' FROM orders;
+-- Output: 2499
+Query 4: Array ka doosra item (Wireless Mouse) nikalna
+
+SQL
+SELECT details #> '{items, 1}' FROM orders;
+-- Output: "Wireless Mouse"
+Query 5: Customer ki membership type nikalna
+
+SQL
+SELECT details #> '{customer, membership}' FROM orders;
+-- Output: "Premium"
+(Tip: Agar in sabka output plain text chahiye ho, toh bas #> ki jagah #>> likh dena)
+
+
+----------------------------------------------------------------------------------
+
+
+
+4. @> Operator ki 5 Queries (Contains - Hamesha WHERE clause me)
+Query 1: Wo orders dhoondo jahan membership 'Premium' hai
+
+SQL
+SELECT * FROM orders WHERE details @> '{"customer": {"membership": "Premium"}}';
+Query 2: Wo orders dhoondo jahan payment method 'UPI' hai
+
+SQL
+SELECT * FROM orders WHERE details @> '{"payment": {"method": "UPI"}}';
+Query 3: Check karna ki kya items ke array me 'Wireless Mouse' hai
+
+SQL
+SELECT * FROM orders WHERE details @> '{"items": ["Wireless Mouse"]}';
+Query 4: Ek sath do conditions check karna (Premium customer + Indore city)
+
+SQL
+SELECT * FROM orders WHERE details @> '{"customer": {"membership": "Premium", "address": {"city": "Indore"}}}';
+Query 5: Wo orders dhoondo jahan delivery_days exact 3 hain
+
+SQL
+SELECT * FROM orders WHERE details @> '{"delivery_days": 3}';
+B
+
+
+-------------------------------------ARRAY OPERATORS___________________________________________
+1. @> Contains Operator 🔥
+
+Check karta hai:
+
+"kya left array ke andar
+right array exist karta hai?"
+Example
+SELECT *
+FROM students
+WHERE skills @> ARRAY['Java'];
+
+Meaning:
+
+skills array me Java hai kya?
+
+Output:
+
+Aman
+Neha
+Multiple Values
+SELECT *
+FROM students
+WHERE skills @> ARRAY['Java','SQL'];
+
+Meaning:
+
+Java AND SQL dono hone chahiye
+
+Output:
+
+Aman
+2. <@ Contained By Operator
+
+Check karta hai:
+
+"kya left array
+right array ke andar hai?"
+Example
+SELECT *
+FROM students
+WHERE ARRAY['Java'] <@ skills;
+
+Meaning:
+
+Java skills ke andar present hai kya?
+
+Same result as @> opposite direction.
+
+3. && Overlap Operator 🔥
+
+Check karta hai:
+
+"kya dono arrays me
+koi common value hai?"
+Example
+SELECT *
+FROM students
+WHERE skills && ARRAY['React','MongoDB'];
+
+Meaning:
+
+React ya MongoDB me se
+kuch bhi common hai kya?
+
+Output:
+
+Ravi
+Neha
+4. = Exact Match
+SELECT *
+FROM students
+WHERE skills = ARRAY['Java','Node','SQL'];
+
+Exact same array match karega.
+
+5. Array Index Access
+SELECT skills[1]
+FROM students;
+
+Output:
+
+Java
+Python
+Java
+
+PostgreSQL arrays:
+
+1-based indexing use karte hain
+0-based nahi
+6. Array Length
+SELECT array_length(skills, 1)
+FROM students;
+
+Meaning:
+
+1st dimension ki length
+7. ANY Operator 🔥
+SELECT *
+FROM students
+WHERE 'Java' = ANY(skills);
+
+Meaning:
+
+Java array me kahin bhi hai kya?
+8. ALL Operator
+SELECT *
+FROM students
+WHERE 'Java' = ALL(skills);
+
+Meaning:
+
+kya sari values Java hain?
+9. Append Element
+UPDATE students
+SET skills = array_append(skills, 'PostgreSQL')
+WHERE name='Aman';
+10. Remove Element
+UPDATE students
+SET skills = array_remove(skills, 'Node')
+WHERE name='Aman';
+Most Important Operators 🚀
+Operator	Meaning
+@>	contains
+<@	contained by
+&&	overlap
+ANY	any value match
+ALL	all values match
+Real-World Uses
+----------------------------------------------------------------------------------------
+===============================
+MATERIALIZED VIEW — POSTGRESQL
+===============================
+
+-----------------------------------
+1. WHY MATERIALIZED VIEW EXISTS
+-----------------------------------
+
+Problem:
+Heavy queries become slow when executed repeatedly.
+
+Example:
+- JOIN on multiple tables
+- GROUP BY
+- SUM / COUNT
+- Analytics queries
+- Dashboard reports
+
+Without Materialized View:
+Every request recalculates query again.
+
+Result:
+- High CPU usage
+- Slow API
+- Database load increase
+
+Solution:
+Store precomputed query result physically.
+
+Materialized View:
+= Saved query result on disk.
+
+
+-----------------------------------
+2. MENTAL MODEL
+-----------------------------------
+
+VIEW
+= Live camera feed
+= Always fresh
+= No data stored
+
+MATERIALIZED VIEW
+= Screenshot
+= Stored snapshot
+= Fast reads
+= Can become stale
+
+
+-----------------------------------
+3. NORMAL VIEW vs MATERIALIZED VIEW
+-----------------------------------
+
+VIEW:
+- Stores only SQL query
+- Executes query every time
+- Always fresh
+- Slower for heavy queries
+
+MATERIALIZED VIEW:
+- Stores final result physically
+- No recalculation during read
+- Very fast reads
+- Data may become outdated
+
+
+-----------------------------------
+4. INTERNAL WORKING
+-----------------------------------
+
+CREATE MATERIALIZED VIEW:
+
+Step 1:
+PostgreSQL executes query.
+
+Step 2:
+Creates physical storage on disk.
+
+Step 3:
+Stores result rows like a table.
+
+Example:
+
+CREATE MATERIALIZED VIEW customer_sales AS
+SELECT customer_id,
+SUM(amount) AS total_sales
+FROM orders
+GROUP BY customer_id;
+
+
+-----------------------------------
+5. IMPORTANT COMMANDS
+-----------------------------------
+
+Create MV:
+
+CREATE MATERIALIZED VIEW customer_sales AS
+SELECT customer_id,
+SUM(amount) AS total_sales
+FROM orders
+GROUP BY customer_id;
+
+
+Read MV:
+
+SELECT * FROM customer_sales;
+
+
+Refresh MV:
+
+REFRESH MATERIALIZED VIEW customer_sales;
+
+
+Concurrent Refresh:
+
+REFRESH MATERIALIZED VIEW CONCURRENTLY customer_sales;
+
+
+-----------------------------------
+6. MOST IMPORTANT CONCEPT
+-----------------------------------
+
+Materialized View
+= SPEED vs FRESHNESS tradeoff
+
+Fast Reads:
+YES
+
+Real-time Data:
+NO
+
+Why stale?
+Because new table data does NOT automatically update MV.
+
+
+-----------------------------------
+7. STALE DATA EXAMPLE
+-----------------------------------
+
+orders table:
+
+customer_id | amount
+1           | 100
+1           | 200
+
+MV Result:
+1 | 300
+
+Now insert:
+
+INSERT INTO orders VALUES (3,1,1000);
+
+Actual total:
+1300
+
+BUT MV still shows:
+300
+
+Why?
+Because MV snapshot is old.
+
+Fix:
+REFRESH MATERIALIZED VIEW customer_sales;
+
+
+-----------------------------------
+8. INDEXES ON MATERIALIZED VIEW
+-----------------------------------
+
+YES, indexes supported.
+
+Why?
+Because data is physically stored.
+
+Example:
+
+CREATE INDEX idx_customer_id
+ON customer_sales(customer_id);
+
+Benefit:
+- Faster lookup
+- Less scanning
+- Better performance
+
+
+-----------------------------------
+9. CONCURRENTLY REFRESH
+-----------------------------------
+
+Normal REFRESH:
+Blocks reads.
+
+Problem:
+Users cannot query MV during refresh.
+
+Solution:
+
+REFRESH MATERIALIZED VIEW CONCURRENTLY customer_sales;
+
+Benefit:
+Users can still read during refresh.
+
+
+-----------------------------------
+10. IMPORTANT CONDITION
+-----------------------------------
+
+CONCURRENTLY requires UNIQUE INDEX.
+
+Example:
+
+CREATE UNIQUE INDEX idx_unique_customer
+ON customer_sales(customer_id);
+
+Why?
+PostgreSQL needs unique row identity internally.
+
+
+-----------------------------------
+11. REAL COMPANY USE CASES
+-----------------------------------
+
+1. Analytics Dashboard
+- revenue reports
+- monthly sales
+
+2. E-commerce
+- top products
+- sales statistics
+
+3. Gaming
+- leaderboards
+- rankings
+
+4. Banking Reports
+- transaction summaries
+
+5. BI Systems
+- aggregated reporting
+
+
+-----------------------------------
+12. REQUEST FLOW
+-----------------------------------
+
+WITHOUT MV:
+
+Client
+→ API
+→ PostgreSQL
+→ Heavy Query Execution
+→ Slow Response
+
+
+WITH MV:
+
+Client
+→ API
+→ PostgreSQL
+→ Read Precomputed Data
+→ Fast Response
+
+
+-----------------------------------
+13. WHEN TO USE
+-----------------------------------
+
+Use MV when:
+- Heavy aggregation
+- Expensive joins
+- Read-heavy system
+- Dashboard/reporting
+- Data freshness not critical
+
+Best for:
+- Analytics
+- Reporting
+- Statistics
+
+
+-----------------------------------
+14. WHEN NOT TO USE
+-----------------------------------
+
+Do NOT use when:
+- Real-time data required
+- Small tables
+- Data changes every second
+- Frequent refresh needed
+
+Example:
+Live stock market prices.
+
+
+-----------------------------------
+15. BEGINNER MISTAKES
+-----------------------------------
+
+Mistake 1:
+Thinking MV auto-updates.
+→ FALSE
+
+Mistake 2:
+Using MV for small/simple queries.
+
+Mistake 3:
+No indexes on MV.
+
+Mistake 4:
+Refreshing too frequently.
+
+Mistake 5:
+Ignoring refresh performance cost.
+
+
+-----------------------------------
+16. PERFORMANCE IMPACT
+-----------------------------------
+
+Advantages:
+- Extremely fast reads
+- Reduced query execution time
+- Less CPU during reads
+
+Disadvantages:
+- Extra storage usage
+- Expensive refresh
+- Stale data risk
+
+
+-----------------------------------
+17. VIEW vs MATERIALIZED VIEW
+-----------------------------------
+
+Feature                 VIEW      MATERIALIZED VIEW
+
+Stores Data             NO        YES
+Fast Reads              NO        YES
+Always Fresh            YES       NO
+Needs Refresh           NO        YES
+Supports Index          NO        YES
+Storage Usage           LOW       HIGH
+
+
+-----------------------------------
+18. BEST PRACTICES
+-----------------------------------
+
+1. Use only for expensive queries.
+
+2. Add indexes.
+
+3. Refresh strategically.
+   Example:
+   - hourly
+   - nightly
+   - cron job
+
+4. Use CONCURRENTLY in production.
+
+5. Monitor refresh time.
+
+
+-----------------------------------
+19. INTERVIEW QUESTIONS
+-----------------------------------
+
+Q1. Difference between View and MV?
+
+Q2. Why is MV faster?
+
+Q3. Why does MV become stale?
+
+Q4. Does MV auto-update?
+
+Q5. Can indexes be created on MV?
+
+Q6. Why UNIQUE INDEX needed for CONCURRENTLY?
+
+Q7. What are real-world use cases?
+
+Q8. Why not use MV everywhere?
+
+
+-----------------------------------
+20. ONE-LINE SUMMARY
+-----------------------------------
+
+Materialized View
+= Physically stored query result
+used for fast reads of expensive queries
+at the cost of stale data and refresh overhead.
